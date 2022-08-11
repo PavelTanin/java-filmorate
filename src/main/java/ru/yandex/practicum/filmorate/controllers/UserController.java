@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.models.User;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
@@ -13,50 +13,45 @@ import java.util.List;
 
 @Slf4j
 @RestController
+@ResponseBody
+@RequestMapping("/users")
 public class UserController {
 
     private int id;
 
     private final HashMap<Integer, User> userList = new HashMap<>();
 
-    @GetMapping("/users")
+    @GetMapping
     public List<User> findAll() {
         return new ArrayList<>(userList.values());
 
     }
 
-    @PostMapping("/users")
-    @ResponseBody
+    @PostMapping
     public ResponseEntity<User> addUser(@Valid @RequestBody User user) {
+        user.setId(idGenerator());
         if (user.getName().isEmpty() || user.getName().isBlank()) {
-            user.setId(idGenerator());
             user.setName(user.getLogin());
-            userList.put(user.getId(), user);
-            log.info("Добавлен пользователь: {}", user);
-            return new ResponseEntity<>(user, HttpStatus.valueOf(201));
-        } else {
-            user.setId(idGenerator());
-            userList.put(user.getId(), user);
-            log.info("Добавлен пользователь: {}", user);
-            return new ResponseEntity<>(user, HttpStatus.valueOf(201));
         }
+        userList.put(user.getId(), user);
+        log.info("Добавлен пользователь: {}", user);
+        return new ResponseEntity<>(user, HttpStatus.valueOf(201));
     }
 
 
-    @PutMapping("/users")
-    @ResponseBody
+    @PutMapping
     public ResponseEntity<User> updateUser(@Valid @RequestBody User user) {
         if (user.getId() > 0) {
             if (userList.containsKey(user.getId())) {
                 userUpdater(user);
-                log.info("Пользователь" + user.getName() + "обновлен: {}", user);
+                log.info("Пользователь {} обновлен: {}", user.getName(), user);
             } else {
                 addUser(user);
             }
             return new ResponseEntity<>(user, HttpStatus.valueOf(200));
         } else {
             log.info("Ошибка при обновлении пользователя: {}", user);
-            return new ResponseEntity<>(HttpStatus.valueOf(500));
+            return new ResponseEntity<>(HttpStatus.valueOf(404));
         }
     }
 

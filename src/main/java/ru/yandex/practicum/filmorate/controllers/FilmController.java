@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.models.Film;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -16,18 +16,19 @@ import java.util.List;
 
 @Slf4j
 @RestController
+@ResponseBody
+@RequestMapping("/films")
 public class FilmController {
 
     private int id;
     private final HashMap<Integer, Film> filmList = new HashMap<>();
 
-    @GetMapping("/films")
+    @GetMapping
     public List<Film> findAll() {
         return new ArrayList<>(filmList.values());
     }
 
-    @PostMapping("/films")
-    @ResponseBody
+    @PostMapping
     public ResponseEntity<Film> addFilm(@Valid @RequestBody Film film) {
         if (releaseDateIsValid(film)) {
             film.setId(idGenerator());
@@ -36,24 +37,23 @@ public class FilmController {
             return new ResponseEntity<>(film, HttpStatus.valueOf(201));
         } else {
             log.debug("Ошибка при добавлении фильма - неверно заполнено одно(или несколько) из полей");
-            return new ResponseEntity<>(HttpStatus.valueOf(500));
+            return new ResponseEntity<>(HttpStatus.valueOf(400));
         }
     }
 
-    @PutMapping("/films")
-    @ResponseBody
+    @PutMapping
     public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film) {
         if (releaseDateIsValid(film) && film.getId() > 0) {
             if (filmList.containsKey(film.getId())) {
                 filmUpdater(film);
-                log.info("Информация о фильме " + film.getName() + " обновлена: {}", film);
+                log.info("Информация о фильме {} обновлена: {}", film.getName(),film);
             } else {
                 addFilm(film);
             }
             return new ResponseEntity<>(film, HttpStatus.valueOf(200));
         } else {
             log.debug("Ошибка при обновлении фильма - неверно заполнено одно(или несколько) из полей");
-            return new ResponseEntity<>(HttpStatus.valueOf(500));
+            return new ResponseEntity<>(HttpStatus.valueOf(404));
         }
     }
 
@@ -61,6 +61,8 @@ public class FilmController {
         try {
             if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
                 throw new ValidationException("Дата релиза раньше 28 декабря 1985 года");
+            } else if (film.getReleaseDate().equals(null)) {
+                throw new ValidationException("Не указана дата релиза");
             } else {
                 return true;
             }
