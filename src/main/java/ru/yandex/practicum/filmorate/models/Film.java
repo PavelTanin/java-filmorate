@@ -13,7 +13,7 @@ public class Film {
 
     private Integer id;
 
-    @NotNull(message = "Некорректно введено название фильма")
+    @NotEmpty(message = "Некорректно введено название фильма")
     private String name;
 
     @Size(min = 0, max = 200, message = "Некорректно введено описание фильма")

@@ -64,7 +64,7 @@ public class UserController {
         try {
             if (user.getLogin() == null || user.getLogin().contains(" ")) {
                 throw new ValidationException("Некорректно указан логин");
-            } else if (user.getEmail() == null || user.getEmail().contains("")) {
+            } else if (user.getEmail() == null || user.getEmail().isBlank()) {
                 throw new ValidationException("Некорректно азан email");
             } else if (user.getBirthday() == null) {
                 throw new ValidationException("Некорректно указана дата рождения");
