@@ -13,16 +13,15 @@ public class Film {
 
     private Integer id;
 
-    @NotNull(message = "Название фильма не указано")
-    @NotBlank(message = "Название фильма не указано")
+    @NotNull(message = "Некорректно введено название фильма")
     private String name;
 
-    @Size(min = 0, max = 200, message = "Слишком длинное описание фильма")
+    @Size(min = 0, max = 200, message = "Некорректно введено описание фильма")
     private String description;
 
     private LocalDate releaseDate;
 
-    @Positive(message = "Продолжительность фильма указана некорректно")
+    @Positive(message = "Некорректно введена продолжительность фильма")
     private Integer duration;
 
 }

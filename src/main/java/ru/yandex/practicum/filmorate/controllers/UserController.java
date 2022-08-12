@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.models.User;
 
 import javax.validation.Valid;
@@ -29,13 +30,17 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> addUser(@Valid @RequestBody User user) {
-        user.setId(idGenerator());
-        if (user.getName().isEmpty() || user.getName().isBlank()) {
-            user.setName(user.getLogin());
+        if (loginAndEmailValid(user)) {
+            user.setId(idGenerator());
+            if (user.getName().isEmpty() || user.getName().isBlank()) {
+                user.setName(user.getLogin());
+            }
+            userList.put(user.getId(), user);
+            log.info("Добавлен пользователь: {}", user);
+            return new ResponseEntity<>(user, HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        userList.put(user.getId(), user);
-        log.info("Добавлен пользователь: {}", user);
-        return new ResponseEntity<>(user, HttpStatus.valueOf(201));
     }
 
 
@@ -48,11 +53,28 @@ public class UserController {
             } else {
                 addUser(user);
             }
-            return new ResponseEntity<>(user, HttpStatus.valueOf(200));
+            return new ResponseEntity<>(user, HttpStatus.OK);
         } else {
             log.info("Ошибка при обновлении пользователя: {}", user);
-            return new ResponseEntity<>(HttpStatus.valueOf(404));
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    private boolean loginAndEmailValid(User user) {
+        try {
+            if (user.getLogin() == null || user.getLogin().contains(" ")) {
+                throw new ValidationException("Некорректно указан логин");
+            } else if (user.getEmail() == null || user.getEmail().contains("")) {
+                throw new ValidationException("Некорректно азан email");
+            } else if (user.getBirthday() == null) {
+                throw new ValidationException("Некорректно указана дата рождения");
+            } else {
+                return true;
+            }
+        } catch (ValidationException e) {
+            System.out.printf(e.getMessage());
+        }
+        return false;
     }
 
     private void userUpdater(User user) {

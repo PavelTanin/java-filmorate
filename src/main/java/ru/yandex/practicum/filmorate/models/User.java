@@ -15,12 +15,10 @@ public class User {
     @Email(message = "Некорректно указан email")
     private String email;
 
-    @NotNull(message = "Некорректно указан логин")
-    @NotBlank(message = "Некорректно указан логин")
     private String login;
 
     private String name;
 
-    @Past
+    @Past(message = "Некорректно указана дата рождения")
     private LocalDate birthday;
 }

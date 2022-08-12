@@ -34,10 +34,10 @@ public class FilmController {
             film.setId(idGenerator());
             filmList.put(film.getId(), film);
             log.info("Добавлен фильм: {}", film);
-            return new ResponseEntity<>(film, HttpStatus.valueOf(201));
+            return new ResponseEntity<>(film, HttpStatus.CREATED);
         } else {
             log.debug("Ошибка при добавлении фильма - неверно заполнено одно(или несколько) из полей");
-            return new ResponseEntity<>(HttpStatus.valueOf(400));
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -50,20 +50,25 @@ public class FilmController {
             } else {
                 addFilm(film);
             }
-            return new ResponseEntity<>(film, HttpStatus.valueOf(200));
+            return new ResponseEntity<>(film, HttpStatus.OK);
         } else {
             log.debug("Ошибка при обновлении фильма - неверно заполнено одно(или несколько) из полей");
-            return new ResponseEntity<>(HttpStatus.valueOf(404));
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     protected boolean releaseDateIsValid(Film film) {
         try {
-            if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-                throw new ValidationException("Дата релиза раньше 28 декабря 1985 года");
-            } else if (film.getReleaseDate().equals(null)) {
-                throw new ValidationException("Не указана дата релиза");
-            } else {
+            if (film.getReleaseDate() == null ||
+                    film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+                throw new ValidationException("Некорректно введена дата релиза");
+            } else if (film.getName() == null) {
+                throw new ValidationException("Некорректно введено название фильма");
+            } else if (film.getDescription() == null) {
+                throw new ValidationException("Некорректно введено описание фильма");
+            } else if (film.getDuration() == null) {
+                throw new ValidationException("Некорректно введена продолжительность фильма");
+            }else {
                 return true;
             }
         } catch (ValidationException e) {
