@@ -1,13 +1,16 @@
 package ru.yandex.practicum.filmorate.models;
 
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
-@Builder
+@NoArgsConstructor
 public class User {
 
     private Integer id;
@@ -21,4 +24,15 @@ public class User {
 
     @Past(message = "Некорректно указана дата рождения")
     private LocalDate birthday;
+
+    @JsonIgnore
+    private Set<Integer> friendList = new HashSet<>();
+
+    public void addFriend(Integer friendId) {
+        friendList.add(friendId);
+    }
+
+    public void deleteFriend(Integer friendId) {
+        friendList.remove(friendId);
+    }
 }

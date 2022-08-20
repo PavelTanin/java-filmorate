@@ -1,92 +1,79 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.models.User;
+import ru.yandex.practicum.filmorate.services.UserService;
+import ru.yandex.practicum.filmorate.storages.user.InMemoryUserStorage;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-@Slf4j
 @RestController
 @ResponseBody
 @RequestMapping("/users")
 public class UserController {
 
-    private int id;
+    private final UserService userService;
+    private final InMemoryUserStorage inMemoryUserStorage;
 
-    private final HashMap<Integer, User> userList = new HashMap<>();
+    @Autowired
+    public UserController(UserService userService, InMemoryUserStorage inMemoryUserStorage) {
+        this.userService = userService;
+        this.inMemoryUserStorage = inMemoryUserStorage;
+    }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public List<User> findAll() {
-        return new ArrayList<>(userList.values());
+        return inMemoryUserStorage.findAll();
+    }
 
+    @GetMapping("{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public User findById(@PathVariable Integer id) {
+        return inMemoryUserStorage.findById(id);
     }
 
     @PostMapping
-    public ResponseEntity<User> addUser(@Valid @RequestBody User user) {
-        if (loginAndEmailValid(user)) {
-            user.setId(idGenerator());
-            if (user.getName().isEmpty() || user.getName().isBlank()) {
-                user.setName(user.getLogin());
-            }
-            userList.put(user.getId(), user);
-            log.info("Добавлен пользователь: {}", user);
-            return new ResponseEntity<>(user, HttpStatus.CREATED);
-        } else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    @ResponseStatus(HttpStatus.OK)
+    public User addUser(@Valid @RequestBody User user) {
+        return inMemoryUserStorage.addUser(user);
     }
-
 
     @PutMapping
-    public ResponseEntity<User> updateUser(@Valid @RequestBody User user) {
-        if (user.getId() > 0) {
-            if (userList.containsKey(user.getId())) {
-                userUpdater(user);
-                log.info("Пользователь {} обновлен: {}", user.getName(), user);
-            } else {
-                addUser(user);
-            }
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        } else {
-            log.info("Ошибка при обновлении пользователя: {}", user);
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    @ResponseStatus(HttpStatus.OK)
+    public User updateUser(@Valid @RequestBody User user) {
+        return inMemoryUserStorage.updateUser(user);
     }
 
-    private boolean loginAndEmailValid(User user) {
-        try {
-            if (user.getLogin() == null || user.getLogin().contains(" ")) {
-                throw new ValidationException("Некорректно указан логин");
-            } else if (user.getEmail() == null || user.getEmail().isBlank()) {
-                throw new ValidationException("Некорректно азан email");
-            } else if (user.getBirthday() == null) {
-                throw new ValidationException("Некорректно указана дата рождения");
-            } else {
-                return true;
-            }
-        } catch (ValidationException e) {
-            System.out.printf(e.getMessage());
-        }
-        return false;
+    @PutMapping("{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public String addFriend(@PathVariable(value = "id") Integer id,
+                            @PathVariable(value = "friendId") Integer friendId) {
+        return userService.addFriend(id, friendId);
     }
 
-    private void userUpdater(User user) {
-        var updatedUser = userList.get(user.getId());
-        updatedUser.setName(user.getName());
-        updatedUser.setEmail(user.getEmail());
-        updatedUser.setLogin(user.getLogin());
-        updatedUser.setBirthday(user.getBirthday());
+    @DeleteMapping("{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public String deleteFriend(@PathVariable(value = "id") Integer id,
+                               @PathVariable(value = "friendId") Integer friendId) {
+        return userService.deleteFriend(id, friendId);
     }
 
-    private int idGenerator() {
-        id++;
-        return id;
+    @GetMapping("{id}/friends")
+    @ResponseStatus(HttpStatus.OK)
+    public List<User> getFriendList(@PathVariable(value = "id") Integer id) {
+        return userService.getFriendList(id);
     }
+
+    @GetMapping("{id}/friends/common/{otherId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<User> commonFriendsList(@PathVariable(value = "id") Integer id,
+                                        @PathVariable(value = "otherId") Integer otherId) {
+        return userService.commonFriendsList(id, otherId);
+    }
+
+
 }

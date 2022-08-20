@@ -2,16 +2,15 @@ package ru.yandex.practicum.filmorate.controllers;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.exceptions.NegativeCountParam;
 import ru.yandex.practicum.filmorate.models.Film;
+import ru.yandex.practicum.filmorate.services.FilmService;
+import ru.yandex.practicum.filmorate.storages.film.InMemoryFilmStorage;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -20,73 +19,62 @@ import java.util.List;
 @RequestMapping("/films")
 public class FilmController {
 
-    private int id;
-    private final HashMap<Integer, Film> filmList = new HashMap<>();
+    private final FilmService filmService;
+    private final InMemoryFilmStorage inMemoryFilmStorage;
+
+    @Autowired
+    public FilmController(FilmService filmService, InMemoryFilmStorage inMemoryFilmStorage) {
+        this.filmService = filmService;
+        this.inMemoryFilmStorage = inMemoryFilmStorage;
+    }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public List<Film> findAll() {
-        return new ArrayList<>(filmList.values());
+        return inMemoryFilmStorage.findAll();
+    }
+
+    @GetMapping("{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Film findById(@PathVariable(value = "id") Integer id) {
+        return inMemoryFilmStorage.findById(id);
     }
 
     @PostMapping
-    public ResponseEntity<Film> addFilm(@Valid @RequestBody Film film) {
-        if (releaseDateIsValid(film)) {
-            film.setId(idGenerator());
-            filmList.put(film.getId(), film);
-            log.info("Добавлен фильм: {}", film);
-            return new ResponseEntity<>(film, HttpStatus.CREATED);
-        } else {
-            log.debug("Ошибка при добавлении фильма - неверно заполнено одно(или несколько) из полей");
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    @ResponseStatus(HttpStatus.OK)
+    public Film addFilm(@Valid @RequestBody Film film) {
+        return inMemoryFilmStorage.addFilm(film);
     }
 
     @PutMapping
-    public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film) {
-        if (releaseDateIsValid(film) && film.getId() > 0) {
-            if (filmList.containsKey(film.getId())) {
-                filmUpdater(film);
-                log.info("Информация о фильме {} обновлена: {}", film.getName(),film);
-            } else {
-                addFilm(film);
-            }
-            return new ResponseEntity<>(film, HttpStatus.OK);
-        } else {
-            log.debug("Ошибка при обновлении фильма - неверно заполнено одно(или несколько) из полей");
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    @ResponseStatus(HttpStatus.OK)
+    public Film updateFilm(@Valid @RequestBody Film film) {
+        return inMemoryFilmStorage.updateFilm(film);
+    }
+
+    @PutMapping("{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public String addLike(@PathVariable(value = "id") Integer id,
+                          @PathVariable(value = "userId") Integer userId) {
+        return filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public String deleteLike(@PathVariable(value = "id") Integer id,
+                             @PathVariable(value = "userId") Integer userId) {
+        return filmService.deleteLike(id, userId);
+    }
+
+    @GetMapping("popular")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Film> getPopulatFilms(@RequestParam(defaultValue = "10") Integer count) {
+        if (count <= 0) {
+            throw new NegativeCountParam("Длинна списка не может быть отрицательной или ровняться нулю");
         }
+
+        return filmService.getPopularFilms(count);
     }
 
-    protected boolean releaseDateIsValid(Film film) {
-        try {
-            if (film.getReleaseDate() == null ||
-                    film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-                throw new ValidationException("Некорректно введена дата релиза");
-            } else if (film.getName() == null) {
-                throw new ValidationException("Некорректно введено название фильма");
-            } else if (film.getDescription() == null) {
-                throw new ValidationException("Некорректно введено описание фильма");
-            } else if (film.getDuration() == null) {
-                throw new ValidationException("Некорректно введена продолжительность фильма");
-            }else {
-                return true;
-            }
-        } catch (ValidationException e) {
-            System.out.printf(e.getMessage());
-        }
-        return false;
-    }
 
-    private void filmUpdater(Film film) {
-        var updatedUser = filmList.get(film.getId());
-        updatedUser.setName(film.getName());
-        updatedUser.setDescription(film.getDescription());
-        updatedUser.setReleaseDate(film.getReleaseDate());
-        updatedUser.setDuration(film.getDuration());
-    }
-
-    private int idGenerator() {
-        id++;
-        return id;
-    }
 }
