@@ -28,8 +28,8 @@ public class UserService {
             throw new ObjectNotFoundException("Нет зарегистрированных пользователей");
         }
 
-        inMemoryUserStorage.findById(id).addFriend(friendId);
-        inMemoryUserStorage.findById(friendId).addFriend(id);
+        inMemoryUserStorage.findById(id).getFriendList().add(friendId);
+        inMemoryUserStorage.findById(friendId).getFriendList().add(id);
         log.info("Пользователи {} и {} добавлены в друзья", inMemoryUserStorage.findById(id).getName(),
                 inMemoryUserStorage.findById(friendId).getName());
         return String.format("%s и %s теперь друзья", inMemoryUserStorage.findById(id).getName(),
@@ -42,8 +42,8 @@ public class UserService {
             throw new ObjectNotFoundException("Нет зарегистрированных пользователей");
         }
 
-        inMemoryUserStorage.findById(id).deleteFriend(friendId);
-        inMemoryUserStorage.findById(friendId).deleteFriend(id);
+        inMemoryUserStorage.findById(id).getFriendList().remove(friendId);
+        inMemoryUserStorage.findById(friendId).getFriendList().remove(id);
         log.info("Пользователи {} и {} больше не друзья", inMemoryUserStorage.findById(id).getName(),
                 inMemoryUserStorage.findById(friendId).getName());
         return String.format("%s и %s больше не друзья", inMemoryUserStorage.findById(id).getName(),

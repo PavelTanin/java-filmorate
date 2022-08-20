@@ -28,11 +28,4 @@ public class User {
     @JsonIgnore
     private Set<Integer> friendList = new HashSet<>();
 
-    public void addFriend(Integer friendId) {
-        friendList.add(friendId);
-    }
-
-    public void deleteFriend(Integer friendId) {
-        friendList.remove(friendId);
-    }
 }
