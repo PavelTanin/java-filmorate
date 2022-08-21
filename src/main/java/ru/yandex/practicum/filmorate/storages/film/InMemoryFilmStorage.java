@@ -80,6 +80,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return id;
     }
 
+    @Override
     public boolean contains(Integer id) {
         return filmList.containsKey(id);
     }

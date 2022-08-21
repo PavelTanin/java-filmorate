@@ -16,4 +16,5 @@ public interface FilmStorage {
 
     Integer idGenerator();
 
+    boolean contains(Integer id);
 }

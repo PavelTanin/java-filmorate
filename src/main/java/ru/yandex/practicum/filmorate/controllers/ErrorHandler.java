@@ -28,9 +28,8 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler(RuntimeException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse otherExceptionHandler(final RuntimeException e) {
-        return new ErrorResponse("Ошибка", "Во время работы возникла ошибка");
+    public void otherExceptionHandler(HttpServletResponse response) throws IOException {
+        response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
 }

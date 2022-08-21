@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.models.User;
 import ru.yandex.practicum.filmorate.services.UserService;
 import ru.yandex.practicum.filmorate.storages.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storages.user.UserStorage;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -16,36 +17,36 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final InMemoryUserStorage inMemoryUserStorage;
+    private final UserStorage userStorage;
 
     @Autowired
-    public UserController(UserService userService, InMemoryUserStorage inMemoryUserStorage) {
+    public UserController(UserService userService, InMemoryUserStorage userStorage) {
         this.userService = userService;
-        this.inMemoryUserStorage = inMemoryUserStorage;
+        this.userStorage = userStorage;
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<User> findAll() {
-        return inMemoryUserStorage.findAll();
+        return userStorage.findAll();
     }
 
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
     public User findById(@PathVariable Integer id) {
-        return inMemoryUserStorage.findById(id);
+        return userStorage.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public User addUser(@Valid @RequestBody User user) {
-        return inMemoryUserStorage.addUser(user);
+        return userStorage.addUser(user);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public User updateUser(@Valid @RequestBody User user) {
-        return inMemoryUserStorage.updateUser(user);
+        return userStorage.updateUser(user);
     }
 
     @PutMapping("{id}/friends/{friendId}")

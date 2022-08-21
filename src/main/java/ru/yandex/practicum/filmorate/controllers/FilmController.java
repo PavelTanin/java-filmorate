@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.NegativeCountParam;
 import ru.yandex.practicum.filmorate.models.Film;
 import ru.yandex.practicum.filmorate.services.FilmService;
+import ru.yandex.practicum.filmorate.storages.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storages.film.InMemoryFilmStorage;
 
 import javax.validation.Valid;
@@ -20,36 +21,36 @@ import java.util.List;
 public class FilmController {
 
     private final FilmService filmService;
-    private final InMemoryFilmStorage inMemoryFilmStorage;
+    private final FilmStorage filmStorage;
 
     @Autowired
-    public FilmController(FilmService filmService, InMemoryFilmStorage inMemoryFilmStorage) {
+    public FilmController(FilmService filmService, InMemoryFilmStorage filmStorage) {
         this.filmService = filmService;
-        this.inMemoryFilmStorage = inMemoryFilmStorage;
+        this.filmStorage = filmStorage;
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<Film> findAll() {
-        return inMemoryFilmStorage.findAll();
+        return filmStorage.findAll();
     }
 
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
     public Film findById(@PathVariable(value = "id") Integer id) {
-        return inMemoryFilmStorage.findById(id);
+        return filmStorage.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public Film addFilm(@Valid @RequestBody Film film) {
-        return inMemoryFilmStorage.addFilm(film);
+        return filmStorage.addFilm(film);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public Film updateFilm(@Valid @RequestBody Film film) {
-        return inMemoryFilmStorage.updateFilm(film);
+        return filmStorage.updateFilm(film);
     }
 
     @PutMapping("{id}/like/{userId}")

@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.DublicateLike;
 import ru.yandex.practicum.filmorate.exceptions.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.models.Film;
+import ru.yandex.practicum.filmorate.storages.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storages.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storages.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storages.user.UserStorage;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,53 +18,53 @@ import java.util.stream.Collectors;
 @Service
 public class FilmService {
 
-    private final InMemoryFilmStorage inMemoryFilmStorage;
-    private final InMemoryUserStorage inMemoryUserStorage;
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
 
-    public FilmService(InMemoryFilmStorage inMemoryFilmStorage, InMemoryUserStorage inMemoryUserStorage) {
-        this.inMemoryFilmStorage = inMemoryFilmStorage;
-        this.inMemoryUserStorage = inMemoryUserStorage;
+    public FilmService(InMemoryFilmStorage filmStorage, InMemoryUserStorage userStorage) {
+        this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
     }
 
     public String addLike(Integer id, Integer userId) {
-        if (!inMemoryFilmStorage.contains(id) && !inMemoryUserStorage.contains(userId)) {
+        if (!filmStorage.contains(id) && !userStorage.contains(userId)) {
             log.info("Попытка добавить лайк несуществующиму фильму или несуществующим пользователем");
             throw new ObjectNotFoundException("Нет такого фильма или пользователя");
         }
-        if (inMemoryFilmStorage.findById(id).getLikes().contains(userId)) {
-            log.info("Попытка повторно поставить лайк. Фильм {} - Пользователь {}", inMemoryFilmStorage.findById(id).getName(),
-                    inMemoryUserStorage.findById(userId).getId());
+        if (filmStorage.findById(id).getLikes().contains(userId)) {
+            log.info("Попытка повторно поставить лайк. Фильм {} - Пользователь {}", filmStorage.findById(id).getName(),
+                    userStorage.findById(userId).getId());
             throw new DublicateLike("Пользователь уже оценил выбранный фильм");
         }
 
         log.info("Поставлен лайк");
-        inMemoryFilmStorage.findById(id).getLikes().add(userId);
-        inMemoryFilmStorage.findById(id).setRate(inMemoryFilmStorage.findById(id).getRate() + 1);
-        return String.format("Пользователю %s понравился фильм %s", inMemoryUserStorage.findById(userId).getLogin(),
-                inMemoryFilmStorage.findById(id).getName());
+        filmStorage.findById(id).getLikes().add(userId);
+        filmStorage.findById(id).setRate(filmStorage.findById(id).getRate() + 1);
+        return String.format("Пользователю %s понравился фильм %s", userStorage.findById(userId).getLogin(),
+                filmStorage.findById(id).getName());
     }
 
     public String deleteLike(Integer id, Integer userId) {
-        if (!inMemoryFilmStorage.contains(id) && !inMemoryUserStorage.contains(userId)) {
+        if (!filmStorage.contains(id) && !userStorage.contains(userId)) {
             log.info("Попытка удалить лайк несуществующиму фильму или несуществующим пользователем");
             throw new ObjectNotFoundException("Нет такого фильма или пользователя");
         }
-        if (!inMemoryFilmStorage.findById(id).getLikes().contains(userId)) {
+        if (!filmStorage.findById(id).getLikes().contains(userId)) {
             log.info("Попытка повторно удалить лайк, который не был поставлен. Фильм {} - Пользователь {}",
-                    inMemoryFilmStorage.findById(id).getName(),
-                    inMemoryUserStorage.findById(userId).getId());
+                    filmStorage.findById(id).getName(),
+                    userStorage.findById(userId).getId());
             throw new DublicateLike("Пользователь еще не оценил выбранный фильм");
         }
 
-        inMemoryFilmStorage.findById(id).getLikes().add(userId);
-        inMemoryFilmStorage.findById(id).setRate(inMemoryFilmStorage.findById(id).getRate() - 1);
-        return String.format("Пользователю %s больше не нравится фильм %s", inMemoryUserStorage.findById(userId).getLogin(),
-                inMemoryFilmStorage.findById(id).getName());
+        filmStorage.findById(id).getLikes().add(userId);
+        filmStorage.findById(id).setRate(filmStorage.findById(id).getRate() - 1);
+        return String.format("Пользователю %s больше не нравится фильм %s", userStorage.findById(userId).getLogin(),
+                filmStorage.findById(id).getName());
     }
 
     public List<Film> getPopularFilms(Integer count) {
         log.info("Получен список %d популярных фильмов");
-        return inMemoryFilmStorage.findAll().stream()
+        return filmStorage.findAll().stream()
                 .sorted(this::compare)
                 .limit(count)
                 .collect(Collectors.toList());
