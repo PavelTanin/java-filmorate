@@ -1,12 +1,12 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.models.Film;
-import ru.yandex.practicum.filmorate.models.CustomValidator;
-import ru.yandex.practicum.filmorate.services.FilmService;
-import ru.yandex.practicum.filmorate.storages.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storages.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.CustomValidator;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -16,11 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class FilmValidationTest {
 
     CustomValidator customValidator = new CustomValidator();
-    InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage(customValidator);
+    InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
 
-    InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage(customValidator);
-    FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage);
-    FilmController filmController = new FilmController(filmService, inMemoryFilmStorage);
+    InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage, customValidator);
+    FilmController filmController = new FilmController(filmService);
 
     @Test
     void shouldThrowBadResponseWhenReleaseDateIsWrong() {

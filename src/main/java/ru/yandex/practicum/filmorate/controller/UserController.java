@@ -1,52 +1,47 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.models.User;
-import ru.yandex.practicum.filmorate.services.UserService;
-import ru.yandex.practicum.filmorate.storages.user.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storages.user.UserStorage;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @ResponseBody
 @RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
-    private final UserStorage userStorage;
-
-    @Autowired
-    public UserController(UserService userService, InMemoryUserStorage userStorage) {
-        this.userService = userService;
-        this.userStorage = userStorage;
-    }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<User> findAll() {
-        return userStorage.findAll();
+        return userService.findAll();
     }
 
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
     public User findById(@PathVariable Integer id) {
-        return userStorage.findById(id);
+        return userService.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public User addUser(@Valid @RequestBody User user) {
-        return userStorage.addUser(user);
+        return userService.addUser(user);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public User updateUser(@Valid @RequestBody User user) {
-        return userStorage.updateUser(user);
+        return userService.updateUser(user);
     }
 
     @PutMapping("{id}/friends/{friendId}")

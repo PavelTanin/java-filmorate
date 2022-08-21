@@ -1,56 +1,47 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
-
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.NegativeCountParam;
-import ru.yandex.practicum.filmorate.models.Film;
-import ru.yandex.practicum.filmorate.services.FilmService;
-import ru.yandex.practicum.filmorate.storages.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storages.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.exception.NegativeCountParam;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @ResponseBody
 @RequestMapping("/films")
 public class FilmController {
 
     private final FilmService filmService;
-    private final FilmStorage filmStorage;
-
-    @Autowired
-    public FilmController(FilmService filmService, InMemoryFilmStorage filmStorage) {
-        this.filmService = filmService;
-        this.filmStorage = filmStorage;
-    }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<Film> findAll() {
-        return filmStorage.findAll();
+        return filmService.findAll();
     }
 
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
     public Film findById(@PathVariable(value = "id") Integer id) {
-        return filmStorage.findById(id);
+        return filmService.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public Film addFilm(@Valid @RequestBody Film film) {
-        return filmStorage.addFilm(film);
+        return filmService.addFilm(film);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public Film updateFilm(@Valid @RequestBody Film film) {
-        return filmStorage.updateFilm(film);
+        return filmService.updateFilm(film);
     }
 
     @PutMapping("{id}/like/{userId}")

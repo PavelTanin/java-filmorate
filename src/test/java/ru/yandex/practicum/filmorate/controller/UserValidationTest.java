@@ -1,11 +1,11 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.models.User;
-import ru.yandex.practicum.filmorate.models.CustomValidator;
-import ru.yandex.practicum.filmorate.services.UserService;
-import ru.yandex.practicum.filmorate.storages.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.CustomValidator;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -15,9 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class UserValidationTest {
 
     CustomValidator customValidator = new CustomValidator();
-    InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage(customValidator);
-    UserService userService = new UserService(inMemoryUserStorage);
-    UserController userController = new UserController(userService, inMemoryUserStorage);
+    InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
+    UserService userService = new UserService(inMemoryUserStorage, customValidator);
+    UserController userController = new UserController(userService);
 
     @Test
     void shouldReturnBadRequestResponsWhenLoginContainsSpace() {

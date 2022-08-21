@@ -1,26 +1,60 @@
-package ru.yandex.practicum.filmorate.services;
+package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.ObjectNotFoundException;
-import ru.yandex.practicum.filmorate.models.User;
-import ru.yandex.practicum.filmorate.storages.user.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storages.user.UserStorage;
+import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserStorage userStorage;
+    private final CustomValidator customValidator;
 
-    @Autowired
-    public UserService(InMemoryUserStorage userStorage) {
-        this.userStorage = userStorage;
+    public List<User> findAll() {
+        return userStorage.findAll();
+    }
+
+    public User findById(Integer id) {
+        if (!userStorage.contains(id)) {
+            log.info("Запрашиваемый пользователь не зарегистрирован");
+            throw new ObjectNotFoundException("Данный пользователь не зарегестрирован");
+        }
+
+        return userStorage.findById(id);
+    }
+
+    public User addUser(User user) {
+        if (!customValidator.isValid(user)) {
+            log.info("Попытка добавить пользователя с некорректной информацией");
+            throw new ValidationException("Некорректно заполнено одно из полей");
+        }
+
+        return userStorage.addUser(user);
+
+    }
+
+    public User updateUser(User user) {
+        if (!customValidator.isValid(user)) {
+            log.info("Попытка обновить пользователя с некорректной информацией");
+            throw new ValidationException("Некорректно заполнено одно из полей");
+        }
+
+        if (!userStorage.contains(user.getId())) {
+            log.info("Попытка обновить незарегестрированного пользователя");
+            throw new ObjectNotFoundException("Попытка обновить незарегестрированного пользователя");
+        }
+
+        return userStorage.updateUser(user);
     }
 
     public String addFriend(Integer id, Integer friendId) {
@@ -89,6 +123,7 @@ public class UserService {
                 userStorage.findById(otherId).getName());
         return result;
     }
+
 }
 
 

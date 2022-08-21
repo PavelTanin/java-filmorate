@@ -1,14 +1,12 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.filmorate.exceptions.DublicateLike;
-import ru.yandex.practicum.filmorate.exceptions.NegativeCountParam;
-import ru.yandex.practicum.filmorate.exceptions.ObjectNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.models.ErrorResponse;
+import ru.yandex.practicum.filmorate.exception.DuplicateLike;
+import ru.yandex.practicum.filmorate.exception.NegativeCountParam;
+import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -16,7 +14,7 @@ import java.io.IOException;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler({ValidationException.class, NegativeCountParam.class, DublicateLike.class,
+    @ExceptionHandler({ValidationException.class, NegativeCountParam.class, DuplicateLike.class,
             javax.validation.ValidationException.class})
     public void handleBadRequest(HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
