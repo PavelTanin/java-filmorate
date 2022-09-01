@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -91,10 +92,9 @@ public class UserService {
             throw new ObjectNotFoundException("Нет зарегистрированных пользователей");
         }
 
-        List<User> result = new ArrayList<>();
-        for (Integer friendId : userStorage.findById(id).getFriendList()) {
-            result.add(userStorage.findById(friendId));
-        }
+        List<User> result = userStorage.findAll().stream()
+                .filter(o -> userStorage.findById(id).getFriendList().contains(o.getId()))
+                .collect(Collectors.toList());
         log.info("Возвращен список друзей пользователя {}", userStorage.findById(id).getName());
         return result;
     }
@@ -105,20 +105,12 @@ public class UserService {
             throw new ObjectNotFoundException("Нет зарегистрированных пользователей");
         }
 
-        Set<Integer> firstUserFriendList = userStorage.findById(id).getFriendList();
-        Set<Integer> secondUserFriendList = userStorage.findById(otherId).getFriendList();
-
-        if (firstUserFriendList.isEmpty() || secondUserFriendList.isEmpty()) {
-            log.info("Нет совпадений в списке друзей");
-            return new ArrayList<>();
-        }
-
-        List<User> result = new ArrayList<>();
-        for (Integer friendId : firstUserFriendList) {
-            if (secondUserFriendList.contains(friendId)) {
-                result.add(userStorage.findById(friendId));
-            }
-        }
+        List<Integer> commonFriendsIds = userStorage.findById(id).getFriendList().stream()
+                .filter(o -> userStorage.findById(otherId).getFriendList().contains(o))
+                .collect(Collectors.toList());
+        List<User> result = userStorage.findAll().stream()
+                .filter(o -> commonFriendsIds.contains(o.getId()))
+                .collect(Collectors.toList());
         log.info("Получен список общих друзей пользователей {} и {}", userStorage.findById(id).getName(),
                 userStorage.findById(otherId).getName());
         return result;

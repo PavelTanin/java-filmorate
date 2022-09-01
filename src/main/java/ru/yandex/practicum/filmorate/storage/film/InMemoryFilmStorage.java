@@ -24,7 +24,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film findById(Integer id) {
-        log.info("Найден пользователь {}", id);
+        log.info("Найден фильм {}", id);
         return filmList.get(id);
     }
 
@@ -32,7 +32,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film addFilm(Film film) {
         film.setId(idGenerator());
         filmList.put(film.getId(), film);
-        log.info("Добавлен пользователь {} - {}", id, film.getName());
+        log.info("Добавлен фильм {} - {}", id, film.getName());
         return film;
     }
 
