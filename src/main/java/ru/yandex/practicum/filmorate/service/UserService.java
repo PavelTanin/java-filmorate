@@ -8,9 +8,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -65,11 +63,9 @@ public class UserService {
         }
 
         userStorage.findById(id).getFriendList().add(friendId);
-        userStorage.findById(friendId).getFriendList().add(id);
-        log.info("Пользователи {} и {} добавлены в друзья", userStorage.findById(id).getName(),
+        log.info("Пользователь {} добавил в друзья пользователя {}", userStorage.findById(id).getName(),
                 userStorage.findById(friendId).getName());
-        return String.format("%s и %s теперь друзья", userStorage.findById(id).getName(),
-                userStorage.findById(friendId).getName());
+        return String.format("%s добавлен в список друзей", userStorage.findById(friendId).getName());
     }
 
     public String deleteFriend(Integer id, Integer friendId) {
@@ -79,11 +75,9 @@ public class UserService {
         }
 
         userStorage.findById(id).getFriendList().remove(friendId);
-        userStorage.findById(friendId).getFriendList().remove(id);
-        log.info("Пользователи {} и {} больше не друзья", userStorage.findById(id).getName(),
+        log.info("Пользователь {} удалил из друзей пользователя {}", userStorage.findById(id).getName(),
                 userStorage.findById(friendId).getName());
-        return String.format("%s и %s больше не друзья", userStorage.findById(id).getName(),
-                userStorage.findById(friendId).getName());
+        return String.format("%s удален из списка друзей", userStorage.findById(friendId).getName());
     }
 
     public List<User> getFriendList(Integer id) {
