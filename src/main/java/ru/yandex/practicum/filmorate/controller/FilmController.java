@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NegativeCountParam;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -61,10 +60,6 @@ public class FilmController {
     @GetMapping("popular")
     @ResponseStatus(HttpStatus.OK)
     public List<Film> getPopulatFilms(@RequestParam(defaultValue = "10") Integer count) {
-        if (count <= 0) {
-            throw new NegativeCountParam("Длинна списка не может быть отрицательной или ровняться нулю");
-        }
-
         return filmService.getPopularFilms(count);
     }
 

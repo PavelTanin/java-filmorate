@@ -4,6 +4,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DuplicateLike;
+import ru.yandex.practicum.filmorate.exception.NegativeCountParam;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -103,6 +104,9 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(Integer count) {
+        if (count <= 0) {
+            throw new NegativeCountParam("Длинна списка не может быть отрицательной или ровняться нулю");
+        }
         log.info("Получен список %d популярных фильмов");
         return filmStorage.findAll().stream()
                 .sorted(this::compare)
