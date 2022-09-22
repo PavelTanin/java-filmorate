@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -27,19 +28,19 @@ public class FilmController {
 
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Film findById(@PathVariable(value = "id") Integer id) {
+    public Optional<Film> findById(@PathVariable(value = "id") Integer id) {
         return filmService.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
-    public Film addFilm(@Valid @RequestBody Film film) {
+    public Optional<Film> addFilm(@Valid @RequestBody Film film) {
         return filmService.addFilm(film);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public Film updateFilm(@Valid @RequestBody Film film) {
+    public Optional<Film> updateFilm(@Valid @RequestBody Film film) {
         return filmService.updateFilm(film);
     }
 
@@ -59,9 +60,8 @@ public class FilmController {
 
     @GetMapping("popular")
     @ResponseStatus(HttpStatus.OK)
-    public List<Film> getPopulatFilms(@RequestParam(defaultValue = "10") Integer count) {
+    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") Integer count) {
         return filmService.getPopularFilms(count);
     }
-
 
 }

@@ -22,31 +22,31 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User findById(Integer id) {
+    public Optional<User> findById(Integer id) {
         log.info("Найден пользователь {}", id);
-        return userList.get(id);
+        return Optional.ofNullable(userList.get(id));
     }
 
     @Override
-    public User addUser(User user) {
+    public Optional<User> addUser(User user) {
         user.setId(idGenerator());
         if (user.getName().isEmpty() || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
         userList.put(user.getId(), user);
         log.info("Добавлен пользователь {} - {}", user.getId(), user.getLogin());
-        return user;
+        return Optional.of(user);
     }
 
     @Override
-    public User updateUser(User user) {
+    public Optional<User> updateUser(User user) {
         var updatedUser = userList.get(user.getId());
         updatedUser.setName(user.getName());
         updatedUser.setEmail(user.getEmail());
         updatedUser.setLogin(user.getLogin());
         updatedUser.setBirthday(user.getBirthday());
         log.info("Обновлена информация о пользователе {}", id);
-        return userList.get(user.getId());
+        return Optional.of(user);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class InMemoryUserStorage implements UserStorage {
         return userList.containsKey(id);
     }
 
-    @Override
+    //@Override
     public Integer idGenerator() {
         id++;
         return id;

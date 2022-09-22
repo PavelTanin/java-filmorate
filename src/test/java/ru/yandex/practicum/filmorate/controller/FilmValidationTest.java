@@ -1,9 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.CustomValidator;
+import ru.yandex.practicum.filmorate.model.CustomValidator;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
@@ -17,9 +18,9 @@ class FilmValidationTest {
 
     CustomValidator customValidator = new CustomValidator();
     InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
-
+    JdbcTemplate jdbcTemplate;
     InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
-    FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage, customValidator);
+    FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage,  jdbcTemplate, customValidator);
     FilmController filmController = new FilmController(filmService);
 
     @Test

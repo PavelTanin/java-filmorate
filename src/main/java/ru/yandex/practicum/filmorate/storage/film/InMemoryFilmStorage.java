@@ -4,10 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -23,30 +20,30 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film findById(Integer id) {
+    public Optional<Film> findById(Integer id) {
         log.info("Найден фильм {}", id);
-        return filmList.get(id);
+        return Optional.ofNullable(filmList.get(id));
     }
 
     @Override
-    public Film addFilm(Film film) {
+    public Optional<Film> addFilm(Film film) {
         film.setId(idGenerator());
         filmList.put(film.getId(), film);
         log.info("Добавлен фильм {} - {}", id, film.getName());
-        return film;
+        return Optional.of(film);
     }
 
     @Override
-    public Film updateFilm(Film film) {
+    public Optional<Film> updateFilm(Film film) {
         var updatedUser = filmList.get(film.getId());
         updatedUser.setName(film.getName());
         updatedUser.setDescription(film.getDescription());
         updatedUser.setReleaseDate(film.getReleaseDate());
         updatedUser.setDuration(film.getDuration());
-        return film;
+        return Optional.of(film);
     }
 
-    @Override
+    //@Override
     public Integer idGenerator() {
         id++;
         return id;
