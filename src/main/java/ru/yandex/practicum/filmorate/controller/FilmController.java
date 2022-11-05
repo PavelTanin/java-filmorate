@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -20,6 +19,24 @@ public class FilmController {
 
     private final FilmService filmService;
 
+    @PostMapping
+    @ResponseStatus(HttpStatus.OK)
+    public Film addFilm(@Valid @RequestBody Film film) {
+        return filmService.addFilm(film);
+    }
+
+    @PutMapping
+    @ResponseStatus(HttpStatus.OK)
+    public Film updateFilm(@Valid @RequestBody Film film) {
+        return filmService.updateFilm(film);
+    }
+
+    @PutMapping("{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public String deleteFilm(@PathVariable(value = "id") Integer id) {
+        return filmService.deleteFilm(id);
+    }
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<Film> findAll() {
@@ -28,20 +45,8 @@ public class FilmController {
 
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Optional<Film> findById(@PathVariable(value = "id") Integer id) {
+    public Film findById(@PathVariable(value = "id") Integer id) {
         return filmService.findById(id);
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.OK)
-    public Optional<Film> addFilm(@Valid @RequestBody Film film) {
-        return filmService.addFilm(film);
-    }
-
-    @PutMapping
-    @ResponseStatus(HttpStatus.OK)
-    public Optional<Film> updateFilm(@Valid @RequestBody Film film) {
-        return filmService.updateFilm(film);
     }
 
     @PutMapping("{id}/like/{userId}")

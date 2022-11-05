@@ -11,6 +11,11 @@ public class Mpa {
         this.id = id;
     }
 
+    public Mpa(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     private int id;
 
     private String name;

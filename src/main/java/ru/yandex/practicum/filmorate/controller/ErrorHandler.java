@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.DuplicateLike;
-import ru.yandex.practicum.filmorate.exception.NegativeCountParam;
+import ru.yandex.practicum.filmorate.exception.NegativeParam;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 
@@ -14,7 +14,7 @@ import java.io.IOException;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler({ValidationException.class, NegativeCountParam.class, DuplicateLike.class,
+    @ExceptionHandler({ValidationException.class, NegativeParam.class, DuplicateLike.class,
             javax.validation.ValidationException.class})
     public void handleBadRequest(HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());

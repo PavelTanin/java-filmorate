@@ -4,12 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Component
@@ -17,54 +21,93 @@ import java.util.Optional;
 @Primary
 public class UserDbStorage implements UserStorage {
 
-    private int id;
-
     private final JdbcTemplate jdbcTemplate;
 
     @Override
+    public User addUser(User user) {
+        if (user.getName().isEmpty() || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+        String query = "INSERT INTO USERS (NAME, LOGIN, EMAIL, BIRTHDATE) VALUES (?, ?, ?, ?)";
+        KeyHolder kh = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getLogin());
+            ps.setString(3, user.getEmail());
+            ps.setDate(4, Date.valueOf(user.getBirthday()));
+            return ps;
+        }, kh);
+        user.setId((Integer) kh.getKey());
+        log.info("Добавлен пользователь {}", user.getId());
+        return user;
+    }
+
+    @Override
+    public User updateUser(User user) {
+        jdbcTemplate.update("UPDATE USERS SET NAME = ?, LOGIN = ?, EMAIL = ?, BIRTHDATE = ? WHERE ID = ?",
+                user.getName(), user.getLogin(), user.getEmail(), user.getBirthday(), user.getId());
+        log.info("Обновлена информация о пользователе {}", user.getId());
+        return user;
+    }
+
+    @Override
+    public void deleteUser(Integer id) {
+        jdbcTemplate.update("DELETE FROM USERS WHERE ID = ?", id);
+        log.info("Пользователь {} удален", id);
+    }
+
+    @Override
     public List<User> findAll() {
+        log.info("Получен список всех пользователей");
         return jdbcTemplate.query("SELECT * FROM USERS", new UserMapper());
     }
 
     @Override
-    public Optional<User> findById(Integer id) {
-        return Optional.of(jdbcTemplate.queryForObject("SELECT * FROM USERS WHERE ID = ?", new UserMapper(), id));
+    public User findById(Integer id) {
+        log.info("Получена информация о пользователе {}", id);
+        return jdbcTemplate.queryForObject("SELECT * FROM USERS WHERE ID = ?", new UserMapper(), id);
     }
 
     @Override
-    public Optional<User> addUser(User user) {
-        if (user.getName().isEmpty() || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        jdbcTemplate.update("INSERT INTO USERS (NAME, LOGIN, EMAIL, BIRTHDATE) VALUES (?, ?, ?, ?)", user.getName(),
-                user.getLogin(), user.getEmail(), user.getBirthday());
-        user.setId(getCreatedId());
-        log.info("Добавлен пользователь {} - {}", user.getId(), user.getLogin());
-        return Optional.of(user);
-
+    public void addFriend(Integer id, Integer friendId) {
+        jdbcTemplate.update("INSERT INTO FRIENDSHIP VALUES (?, ?)", id, friendId);
     }
 
     @Override
-    public Optional<User> updateUser(User user) {
-        jdbcTemplate.update("UPDATE USERS SET NAME = ?, LOGIN = ?, EMAIL = ?, BIRTHDATE = ? WHERE ID = ?",
-                user.getName(), user.getLogin(), user.getEmail(), user.getBirthday(), user.getId());
-        log.info("Обновлена информация о пользователе {}", user.getId());
-        return Optional.of(user);
+    public void deleteFriend(Integer id, Integer friendId) {
+        log.info("Пользователь {} удален", id);
+        jdbcTemplate.update("DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIENDED_USER = ?", id, friendId);
     }
+
+    @Override
+    public List<User> getFriendList(Integer id) {
+        return jdbcTemplate.query("SELECT u.* FROM FRIENDSHIP as f " +
+                        "INNER JOIN USERS AS u ON f.FRIENDED_USER = u.ID " +
+                        "WHERE f.USER_ID = ?", new UserMapper(), id);
+    }
+
+    @Override
+    public List<User> commonFriendsList(Integer id, Integer otherId) {
+        return jdbcTemplate.query("SELECT u.* FROM FRIENDSHIP as f " +
+                "INNER JOIN USERS AS u ON f.FRIENDED_USER = u.ID " +
+                "WHERE f.USER_ID = ? " +
+                "INTERSECT " +
+                "SELECT u.* FROM FRIENDSHIP as f " +
+                "INNER JOIN USERS AS u ON f.FRIENDED_USER = u.ID " +
+                "WHERE f.USER_ID = ?", new UserMapper(), id, otherId);
+    }
+
 
     @Override
     public boolean contains(Integer id) {
-        return jdbcTemplate.queryForList("SELECT ID FROM USERS", Integer.class).contains(id);
+        return jdbcTemplate.queryForObject("SELECT COUNT(ID) FROM USERS WHERE ID = ?", Integer.class, id) > 0;
     }
 
-    private Integer getCreatedId() {
-        return jdbcTemplate.queryForObject("SELECT ID FROM USERS ORDER BY ID DESC LIMIT 1", Integer.class);
+    @Override
+    public boolean containsFriend(Integer id, Integer friendId) {
+        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM FRIENDSHIP WHERE USER_ID = ? AND FRIENDED_USER = ?",
+                Integer.class, id, friendId) > 0;
     }
-
-    /*@Override
-    public Integer idGenerator() {
-        id++;
-        return id;
-    }*/
 
 }

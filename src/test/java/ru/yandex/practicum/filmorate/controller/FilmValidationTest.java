@@ -1,29 +1,29 @@
+
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.CustomValidator;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FilmValidationTest {
 
-    CustomValidator customValidator = new CustomValidator();
-    InMemoryFilmStorage inMemoryFilmStorage = new InMemoryFilmStorage();
-    JdbcTemplate jdbcTemplate;
-    InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
-    FilmService filmService = new FilmService(inMemoryFilmStorage, inMemoryUserStorage,  jdbcTemplate, customValidator);
-    FilmController filmController = new FilmController(filmService);
+    private final FilmController filmController;
+
 
     @Test
     void shouldThrowBadResponseWhenReleaseDateIsWrong() {
@@ -32,7 +32,7 @@ class FilmValidationTest {
         film.setDescription("Test Discription");
         film.setDuration(100);
         film.setReleaseDate(LocalDate.of(1895,12,27));
-        film.setMpa(new Mpa(1));
+        film.setMpa(new Mpa(1, "TestMPA"));
         Throwable exception = assertThrows(ValidationException.class, () -> filmController.addFilm(film));
         assertEquals("Некорректно введена дата релиза", exception.getMessage());
     }
@@ -43,7 +43,7 @@ class FilmValidationTest {
         film.setName("Test Film");
         film.setDescription("Test Discription");
         film.setDuration(100);
-        film.setMpa(new Mpa(1));
+        film.setMpa(new Mpa(1, "TestMPA"));
         Throwable exception = assertThrows(ValidationException.class, () -> filmController.addFilm(film));
         assertEquals("Некорректно введена дата релиза", exception.getMessage());
     }
@@ -54,7 +54,7 @@ class FilmValidationTest {
         film.setDescription("Test Discription");
         film.setDuration(100);
         film.setReleaseDate(LocalDate.of(1895,12,27));
-        film.setMpa(new Mpa(1));
+        film.setMpa(new Mpa(1, "TestMPA"));
         Throwable exception = assertThrows(ValidationException.class, () -> filmController.addFilm(film));
         assertEquals("Некорректно введена дата релиза", exception.getMessage());
     }
@@ -65,7 +65,7 @@ class FilmValidationTest {
         film.setName("Test Film");
         film.setDescription("Test Discription");
         film.setReleaseDate(LocalDate.of(1895,12,27));
-        film.setMpa(new Mpa(1));
+        film.setMpa(new Mpa(1, "TestMPA"));
         Throwable exception = assertThrows(ValidationException.class, () -> filmController.addFilm(film));
         assertEquals("Некорректно введена дата релиза", exception.getMessage());
     }
@@ -76,7 +76,7 @@ class FilmValidationTest {
         film.setName("Test Film");
         film.setDuration(100);
         film.setReleaseDate(LocalDate.of(1895,12,27));
-        film.setMpa(new Mpa(1));
+        film.setMpa(new Mpa(1, "TestMPA"));
         Throwable exception = assertThrows(ValidationException.class, () -> filmController.addFilm(film));
         assertEquals("Некорректно введена дата релиза", exception.getMessage());
     }
@@ -93,10 +93,10 @@ class FilmValidationTest {
         film.setName("Test Film");
         film.setDescription("Test Discription");
         film.setDuration(100);
-        film.setMpa(new Mpa(1));
         film.setReleaseDate(LocalDate.of(1895,12,29));
-        filmController.addFilm(film);
-        assertEquals(Optional.of(film), inMemoryFilmStorage.findById(1));
+        film.setRate(4);
+        film.setMpa(new Mpa(1, "TestMPA"));
+        assertEquals(film.getName(), filmController.addFilm(film).getName());
     }
 
     @Test
@@ -104,11 +104,11 @@ class FilmValidationTest {
         Film film = new Film();
         film.setName("Test Film");
         film.setDescription("Test Discription");
+        film.setRate(4);
         film.setDuration(100);
-        film.setReleaseDate(LocalDate.of(1895,12,28));
-        film.setMpa(new Mpa(1));
-        filmController.addFilm(film);
-        assertEquals(Optional.of(film), inMemoryFilmStorage.findById(1));
+        film.setReleaseDate(LocalDate.of(1985,12,28));
+        film.setMpa(new Mpa(1, null));
+        assertEquals(film.getName(), filmController.addFilm(film).getName());
     }
 
 }

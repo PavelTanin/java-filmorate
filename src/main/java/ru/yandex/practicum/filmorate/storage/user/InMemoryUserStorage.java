@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -14,6 +15,35 @@ public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Integer, User> userList = new HashMap();
 
+    private final Map<Integer, List<Integer>> friendshipList = new HashMap<>();
+
+    @Override
+    public User addUser(User user) {
+        user.setId(idGenerator());
+        if (user.getName().isEmpty() || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+        userList.put(user.getId(), user);
+        log.info("Добавлен пользователь {} - {}", user.getId(), user.getLogin());
+        return user;
+    }
+
+    @Override
+    public User updateUser(User user) {
+        var updatedUser = userList.get(user.getId());
+        updatedUser.setName(user.getName());
+        updatedUser.setEmail(user.getEmail());
+        updatedUser.setLogin(user.getLogin());
+        updatedUser.setBirthday(user.getBirthday());
+        log.info("Обновлена информация о пользователе {}", id);
+        return user;
+    }
+
+    @Override
+    public void deleteUser(Integer id) {
+        userList.remove(id);
+        log.info("Пользователь {} удален", id);
+    }
 
     @Override
     public List<User> findAll() {
@@ -22,31 +52,37 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Optional<User> findById(Integer id) {
+    public User findById(Integer id) {
         log.info("Найден пользователь {}", id);
-        return Optional.ofNullable(userList.get(id));
+        return userList.get(id);
     }
 
     @Override
-    public Optional<User> addUser(User user) {
-        user.setId(idGenerator());
-        if (user.getName().isEmpty() || user.getName().isBlank()) {
-            user.setName(user.getLogin());
+    public void addFriend(Integer id, Integer friendId) {
+        if (friendshipList.containsKey(id)) {
+            friendshipList.get(id).add(friendId);
+        } else {
+            friendshipList.put(id, new ArrayList<>(friendId));
         }
-        userList.put(user.getId(), user);
-        log.info("Добавлен пользователь {} - {}", user.getId(), user.getLogin());
-        return Optional.of(user);
     }
 
     @Override
-    public Optional<User> updateUser(User user) {
-        var updatedUser = userList.get(user.getId());
-        updatedUser.setName(user.getName());
-        updatedUser.setEmail(user.getEmail());
-        updatedUser.setLogin(user.getLogin());
-        updatedUser.setBirthday(user.getBirthday());
-        log.info("Обновлена информация о пользователе {}", id);
-        return Optional.of(user);
+    public void deleteFriend(Integer id, Integer friendId) {
+        friendshipList.get(id).remove(friendId);
+    }
+
+    @Override
+    public List<User> getFriendList(Integer id) {
+        return friendshipList.get(id).stream()
+                .map(this::findById)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> commonFriendsList(Integer id, Integer otherId) {
+        return getFriendList(id).stream()
+                .filter(o -> getFriendList(otherId).contains(o))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -54,7 +90,11 @@ public class InMemoryUserStorage implements UserStorage {
         return userList.containsKey(id);
     }
 
-    //@Override
+    @Override
+    public boolean containsFriend(Integer id, Integer friendId) {
+        return friendshipList.get(id).contains(friendId);
+    }
+
     public Integer idGenerator() {
         id++;
         return id;

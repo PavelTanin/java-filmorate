@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.mpaandgenres.MpaAndGenreDBStorage;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -27,7 +26,7 @@ public class MpaAndGenresController {
 
     @GetMapping("/mpa/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Optional<Mpa> findMpaById(@PathVariable(value = "id") Integer id) {
+    public Mpa findMpaById(@PathVariable(value = "id") Integer id) {
         return mpaAndGenreDBStorage.findMpaById(id);
     }
 
@@ -39,7 +38,7 @@ public class MpaAndGenresController {
 
     @GetMapping("/genres/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Optional<Genre> findGenreById(@PathVariable(value = "id") Integer id) {
+    public Genre findGenreById(@PathVariable(value = "id") Integer id) {
         return mpaAndGenreDBStorage.findGenreById(id);
     }
 

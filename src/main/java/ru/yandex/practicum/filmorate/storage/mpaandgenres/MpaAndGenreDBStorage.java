@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Component
@@ -23,11 +22,16 @@ public class MpaAndGenreDBStorage implements MpaAndGenresStorage{
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public Optional<Mpa> findMpaById(Integer id) {
-        if (!mpaContains(id)) {
-            throw new ObjectNotFoundException("Такого рейтинга нет");
+    public Mpa findMpaById(Integer id) {
+        if (id <= 0) {
+            throw new ObjectNotFoundException("Некорректный номер рейтинга MPA");
         }
-        return Optional.of(jdbcTemplate.queryForObject("SELECT * FROM MPA_RATING WHERE MPA_ID = ?", new MpaMapper(), id));
+        Mpa mpa = jdbcTemplate.queryForObject("SELECT * FROM MPA_RATING WHERE MPA_ID = ?", new MpaMapper(), id);
+        if (mpa == null) {
+            throw new ObjectNotFoundException("Такого рейтинга нет");
+        } else {
+            return mpa;
+        }
     }
 
     @Override
@@ -36,25 +40,19 @@ public class MpaAndGenreDBStorage implements MpaAndGenresStorage{
     }
 
     @Override
-    public Optional<Genre> findGenreById(Integer id) {
-        if (!mpaContains(id)) {
+    public Genre findGenreById(Integer id) {
+        if (id <= 0) {
+            throw new ObjectNotFoundException("Некорректный номер жанра");
+        }
+        Genre genre = jdbcTemplate.queryForObject("SELECT * FROM GENRES WHERE GENRE_ID = ?", new GenreMapper(), id);
+        if (genre == null) {
             throw new ObjectNotFoundException("Такого жанра нет");
         }
-        return Optional.of(jdbcTemplate.queryForObject("SELECT * FROM GENRES WHERE GENRE_ID = ?", new GenreMapper(), id));
+        return genre;
     }
 
     @Override
     public List<Genre> findAllGenres() {
         return jdbcTemplate.query("SELECT * FROM GENRES", new GenreMapper());
-    }
-
-    @Override
-    public boolean mpaContains(Integer id) {
-        return jdbcTemplate.queryForList("SELECT MPA_ID FROM MPA_RATING", Integer.class).contains(id);
-    }
-
-    @Override
-    public boolean genreContains(Integer id) {
-        return jdbcTemplate.queryForList("SELECT GENRE_ID FROM GENRES", Integer.class).contains(id);
     }
 }

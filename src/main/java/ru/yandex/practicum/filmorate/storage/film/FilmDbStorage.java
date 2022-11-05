@@ -4,15 +4,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.FilmMapper;
-import ru.yandex.practicum.filmorate.dao.GenreMapper;
-import ru.yandex.practicum.filmorate.dao.MpaMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.GenresSorter;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -20,80 +24,123 @@ import java.util.*;
 @Primary
 public class FilmDbStorage implements FilmStorage {
 
-    private int id;
-
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public List<Film> findAll() {
-        List<Film> result = jdbcTemplate.query("SELECT * FROM FILMS", new FilmMapper());
-        for (Film film : result) {
-            film.setMpa(jdbcTemplate.queryForObject("SELECT m.* FROM FILMS AS f INNER JOIN MPA_RATING AS m ON m.MPA_ID = f.MPA WHERE ID = ?",
-                    new MpaMapper(), film.getId()));
-            film.getGenres().addAll(jdbcTemplate.query("SELECT g.* FROM FILM_GENRE AS fg INNER JOIN GENRES AS g ON g.GENRE_ID = fg.GENRE_ID WHERE FILM_ID = ?",
-                    new GenreMapper(), film.getId()));
-        }
-        log.info("Получен список фильмов");
-        return result;
-    }
-
-    @Override
-    public Optional<Film> findById(Integer id) {
-        Film result = jdbcTemplate.queryForObject("SELECT * FROM FILMS WHERE ID = ?", new FilmMapper(), id);
-        result.setMpa(jdbcTemplate.queryForObject("SELECT m.* FROM FILMS AS f INNER JOIN MPA_RATING AS m on m.MPA_ID = f.MPA WHERE ID = ?",
-                new MpaMapper(), result.getId()));
-        result.getGenres().addAll(jdbcTemplate.query("SELECT g.* FROM FILM_GENRE AS fg INNER JOIN GENRES AS g ON g.GENRE_ID = fg.GENRE_ID WHERE FILM_ID = ? ORDER BY g.GENRE_ID ASC",
-                new GenreMapper(), result.getId()));
-        log.info("Получен фильм");
-        return Optional.of(result);
-    }
-
-    @Override
-    public Optional<Film> addFilm(Film film) {
-        jdbcTemplate.update("INSERT INTO FILMS (NAME, DESCRIPTION, DURATION, RELEASEDATE, RATE, MPA) VALUES (?, ?, ?, ?, ?, ?)", film.getName(),
-                film.getDescription(), film.getDuration(), film.getReleaseDate(), film.getRate(), film.getMpa().getId());
-        film.setId(getCreatedId());
+    public Film addFilm(Film film) {
+        String query = "INSERT INTO FILMS (NAME, DESCRIPTION, DURATION, RELEASEDATE, RATE, MPA) VALUES (?, ?, ?, ?, ?, ?)";
+        KeyHolder kh = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, film.getName());
+            ps.setString(2, film.getDescription());
+            ps.setInt(3, film.getDuration());
+            ps.setDate(4, Date.valueOf(film.getReleaseDate()));
+            ps.setInt(5, film.getRate());
+            ps.setInt(6, film.getMpa().getId());
+            return ps;
+        }, kh);
+        film.setId((Integer) kh.getKey());
         if (!film.getGenres().isEmpty()) {
+            film.setGenres(film.getGenres().stream()
+                    .sorted(new GenresSorter())
+                    .collect(Collectors.toCollection(LinkedHashSet::new)));
             updateGenres(film);
         }
         log.info("Добавлен фильм {} - {}", film.getId(), film.getName());
-        return findById(film.getId());
+        return film;
     }
 
     @Override
-    public Optional<Film> updateFilm(Film film) {
+    public Film updateFilm(Film film) {
         jdbcTemplate.update("UPDATE FILMS SET NAME = ?, DESCRIPTION = ?, DURATION = ?, RELEASEDATE = ?," +
                         "RATE = ?, MPA = ? WHERE ID = ?", film.getName(), film.getDescription(), film.getDuration(),
                 film.getReleaseDate(), film.getRate(), film.getMpa().getId(), film.getId());
         jdbcTemplate.update("DELETE FROM FILM_GENRE WHERE FILM_ID = ?", film.getId());
         if (!film.getGenres().isEmpty()) {
+            film.setGenres(film.getGenres().stream()
+                    .sorted(new GenresSorter())
+                    .collect(Collectors.toCollection(LinkedHashSet::new)));
             updateGenres(film);
         }
         log.info("Обновлена информация о пользователе {}", film.getId());
-        return findById(film.getId());
+        return film;
+    }
+
+    @Override
+    public void deleteFilm(Integer id) {
+        jdbcTemplate.update("DELETE FROM FILMS WHERE ID = ?", id);
+        log.info("Фильм {} удален", id);
+    }
+
+    @Override
+    public List<Film> findAll() {
+        List<Film> result = jdbcTemplate.query("SELECT f.*, m.MPA as mpa_name," +
+                "string_agg(g.GENRE_ID, ',') as film_genre_id," +
+                "string_agg(g.GENRE, ',') as film_genre " +
+                "FROM GENRES AS g " +
+                "RIGHT OUTER JOIN FILM_GENRE AS fg ON g.GENRE_ID = fg.GENRE_ID " +
+                "RIGHT OUTER JOIN FILMS AS f ON f.ID=fg.FILM_ID " +
+                "INNER JOIN MPA_RATING AS m ON f.MPA = m.MPA_ID " +
+                "GROUP BY f.ID", new FilmMapper());
+        log.info("Получен список фильмов");
+        return result;
+    }
+
+    @Override
+    public Film findById(Integer id) {
+        Film result = jdbcTemplate.queryForObject("SELECT f.*, m.MPA as mpa_name," +
+                "string_agg(g.GENRE_ID, ',') as film_genre_id," +
+                "string_agg(g.GENRE, ',') as film_genre " +
+                "FROM GENRES AS g " +
+                "INNER JOIN FILM_GENRE AS fg ON g.GENRE_ID = fg.GENRE_ID " +
+                "RIGHT OUTER JOIN FILMS AS f ON f.ID=fg.FILM_ID " +
+                "INNER JOIN MPA_RATING AS m ON f.MPA = m.MPA_ID WHERE f.ID = ? " +
+                "GROUP BY f.ID", new FilmMapper(), id);
+        log.info("Получен фильм");
+        return result;
+    }
+
+    @Override
+    public void addLike(Integer id, Integer userId) {
+        jdbcTemplate.update("INSERT INTO LIKES VALUES (?, ?)", id, userId);
+        jdbcTemplate.update("UPDATE FILMS SET RATE = (SELECT RATE " +
+                "FROM FILMS WHERE ID = ?) + 1 WHERE ID = ?", id, id);
+    }
+
+    @Override
+    public void deleteLike(Integer id, Integer userId) {
+        jdbcTemplate.update("DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?", id, userId);
+        jdbcTemplate.update("UPDATE FILMS SET RATE = (SELECT RATE " +
+                "FROM FILMS WHERE ID = ?) - 1 WHERE ID = ?", id, id);
     }
 
     private void updateGenres(Film film) {
-        List<Genre> genres = new ArrayList<>(film.getGenres());
-        Collections.sort(genres, new GenresSorter());
-        for (Genre genre : genres) {
+        for (Genre genre : film.getGenres()) {
             jdbcTemplate.update("INSERT INTO FILM_GENRE VALUES (?, ?)", film.getId(), genre.getId());
         }
     }
 
-
-    private Integer getCreatedId() {
-        return jdbcTemplate.queryForObject("SELECT ID FROM FILMS ORDER BY ID DESC LIMIT 1", Integer.class);
+    @Override
+    public List<Film> getPopularFilms(Integer count) {
+        return jdbcTemplate.query("SELECT f.*, m.MPA as mpa_name," +
+        "string_agg(g.GENRE_ID, ',') as film_genre_id," +
+                "string_agg(g.GENRE, ',') as film_genre " +
+                "FROM GENRES AS g " +
+                "INNER JOIN FILM_GENRE AS fg ON g.GENRE_ID = fg.GENRE_ID " +
+                "RIGHT OUTER JOIN FILMS AS f ON f.ID=fg.FILM_ID " +
+                "INNER JOIN MPA_RATING AS m ON f.MPA = m.MPA_ID " +
+                "GROUP BY f.ID ORDER BY f.RATE DESC LIMIT ?", new FilmMapper(), count);
     }
 
-/*    @Override
-    public Integer idGenerator() {
-        id++;
-        return id;
-    }*/
+    @Override
+    public boolean containsLike(Integer id, Integer userId) {
+        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?",
+                Integer.class, id, userId) > 0;
+    }
 
     @Override
     public boolean contains(Integer id) {
-        return jdbcTemplate.queryForList("SELECT ID FROM FILMS", Integer.class).contains(id);
+        return jdbcTemplate.queryForObject("SELECT COUNT(ID) FROM FILMS WHERE ID = ?", Integer.class, id) > 0;
     }
 }

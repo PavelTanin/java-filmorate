@@ -5,7 +5,6 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -57,24 +56,24 @@ class FilmorateApplicationTests {
 		film.setDuration(100);
 		film.setReleaseDate(LocalDate.of(1994,12,27));
 		film.setRate(4);
-		film.setMpa(new Mpa(2));
-		film.setGenres(new HashSet<>(Arrays.asList(new Genre(1), new Genre(2))));
+		film.setMpa(new Mpa(2, "PG"));
+		film.setGenres(new HashSet<>(Arrays.asList(new Genre(1, "Комедия"), new Genre(2, "Драма"))));
 		Film film2 = new Film();
 		film2.setName("Test Film 2");
 		film2.setDescription("Test Discription 2");
 		film2.setDuration(90);
 		film2.setReleaseDate(LocalDate.of(1998,2,3));
 		film2.setRate(3);
-		film2.setMpa(new Mpa(1));
-		film2.setGenres(new HashSet<>(Arrays.asList(new Genre(3), new Genre(4))));
+		film2.setMpa(new Mpa(1, "G"));
+		film2.setGenres(new HashSet<>(Arrays.asList(new Genre(3, "Мультфильм"), new Genre(4, "Триллер"))));
 		Film film3 = new Film();
 		film3.setName("Test Film 3");
 		film3.setDescription("Test Discription 3");
 		film3.setDuration(90);
 		film3.setReleaseDate(LocalDate.of(1996,5,3));
 		film3.setRate(3);
-		film3.setMpa(new Mpa(3));
-		film3.setGenres(new HashSet<>(Arrays.asList(new Genre(2), new Genre(3))));
+		film3.setMpa(new Mpa(3, "PG-13"));
+		film3.setGenres(new HashSet<>(Arrays.asList(new Genre(2, "Драмма"), new Genre(3, "Мультфильм"))));
 		filmStorage.addFilm(film);
 		filmStorage.addFilm(film2);
 		filmStorage.addFilm(film3);
@@ -93,7 +92,7 @@ class FilmorateApplicationTests {
 		userTestById.setLogin("testlogin2");
 		userTestById.setEmail("test2@test2.ru");
 		userTestById.setBirthday(LocalDate.of(2004, 11, 6));
-		assertEquals(Optional.of(userTestById), userStorage.findById(2));
+		assertEquals(userTestById, userStorage.findById(2));
 	}
 
 	@Test
@@ -105,8 +104,41 @@ class FilmorateApplicationTests {
 		userUpdate.setEmail("updatetest@test.ru");
 		userUpdate.setBirthday(LocalDate.of(2005, 12, 5));
 		userStorage.updateUser(userUpdate);
-		assertEquals(Optional.of(userUpdate), userStorage.findById(3));
+		assertEquals(userUpdate, userStorage.findById(3));
 	}
+
+	@Test
+	public void addAndDeleteUserTest() {
+		User user = new User();
+		user.setName("Add Test");
+		user.setLogin("AddTest");
+		user.setBirthday(LocalDate.of(1992, 06, 15));
+		user.setEmail("addtest@test.ru");
+		Integer userListSize = userStorage.findAll().size();
+		userStorage.addUser(user);
+		user.setId(userListSize + 1);
+		assertEquals(user, userStorage.findById(userListSize + 1));
+		userStorage.deleteUser(userListSize + 1);
+		assertEquals(userListSize, userStorage.findAll().size());
+	}
+
+	@Test
+	public void addAndDeleteFriendTest() {
+		userStorage.addFriend(1, 2);
+		assertEquals(1, userStorage.getFriendList(1).size());
+		userStorage.deleteFriend(1, 2);
+		assertEquals(0, userStorage.getFriendList(1).size());
+	}
+
+	@Test
+	public void getCommonFriendsTest() {
+		userStorage.addFriend(1, 2);
+		userStorage.addFriend(3, 2);
+		assertEquals(userStorage.findById(2), userStorage.commonFriendsList(1, 3).get(0));
+		userStorage.deleteFriend(1, 2);
+		userStorage.deleteFriend(3, 2);
+	}
+
 
 	@Test
 	public void getFilmListTest() {
@@ -122,15 +154,31 @@ class FilmorateApplicationTests {
 		filmTestById.setDuration(90);
 		filmTestById.setReleaseDate(LocalDate.of(1998,2,3));
 		filmTestById.setRate(3);
-		filmTestById.setMpa(new Mpa(1));
+		filmTestById.setMpa(new Mpa(1, "G"));
 		filmTestById.getMpa().setName("G");
 		List<Genre> genresOfFilm = new ArrayList<>();
-		genresOfFilm.add(new Genre(4));
-		genresOfFilm.add(new Genre(3));
-		genresOfFilm.get(0).setName("Триллер");
-		genresOfFilm.get(1).setName("Мультфильм");
+		genresOfFilm.add(new Genre(4, "Триллер"));
+		genresOfFilm.add(new Genre(3, "Мультфильм"));
 		filmTestById.setGenres(new HashSet<>(genresOfFilm));
-		assertEquals(Optional.of(filmTestById), filmStorage.findById(2));
+		assertEquals(filmTestById, filmStorage.findById(2));
+	}
+
+	@Test
+	public void addAdnDeleteFilmTest() {
+		Film film = new Film();
+		film.setName("Add Film Test");
+		film.setDescription("Add Test Discription");
+		film.setDuration(100);
+		film.setReleaseDate(LocalDate.of(1994,12,27));
+		film.setRate(4);
+		film.setMpa(new Mpa(2, "PG"));
+		film.setGenres(new HashSet<>(Arrays.asList(new Genre(1, "Комедия"), new Genre(2, "Драма"))));
+		Integer filmListSize = filmStorage.findAll().size();
+		filmStorage.addFilm(film);
+		film.setId(4);
+		assertEquals(film, filmStorage.findById(4));
+		filmStorage.deleteFilm(4);
+		assertEquals(filmListSize, filmStorage.findAll().size());
 	}
 
 	@Test
@@ -142,17 +190,33 @@ class FilmorateApplicationTests {
 		updatedFilm.setDuration(90);
 		updatedFilm.setReleaseDate(LocalDate.of(1996,5,3));
 		updatedFilm.setRate(3);
-		updatedFilm.setMpa(new Mpa(2));
-		updatedFilm.getMpa().setName("PG");
+		updatedFilm.setMpa(new Mpa(2, "PG"));
 		filmStorage.updateFilm(updatedFilm);
-		assertEquals(Optional.of(updatedFilm), filmStorage.findById(3));
+		assertEquals(updatedFilm, filmStorage.findById(3));
+	}
+
+	@Test
+	public void addAndDeleteLikeTest() {
+		Integer actualRate = filmStorage.findById(1).getRate();
+		filmStorage.addLike(1, 1);
+		assertEquals(actualRate + 1, filmStorage.findById(1).getRate());
+		filmStorage.deleteLike(1, 2);
+		assertEquals(actualRate, filmStorage.findById(1).getRate());
+	}
+
+	@Test
+	public void getPopularFilmTest() {
+		filmStorage.addLike(3, 1);
+		filmStorage.addLike(3, 2);
+		assertEquals(filmStorage.findById(3), filmStorage.getPopularFilms(3).get(0));
+		filmStorage.deleteLike(3, 1);
+		filmStorage.deleteLike(3, 2);
 	}
 
 	@Test
 	public void findMpaById() {
-		Mpa mpa = new Mpa(2);
-		mpa.setName("PG");
-		assertEquals(Optional.of(mpa), mpaAndGenresStorage.findMpaById(2));
+		Mpa mpa = new Mpa(2, "PG");
+		assertEquals(mpa, mpaAndGenresStorage.findMpaById(2));
 	}
 
 	@Test
@@ -162,14 +226,14 @@ class FilmorateApplicationTests {
 
 	@Test
 	public void findGenreById() {
-		Genre genre = new Genre(4);
-		genre.setName("Триллер");
-		assertEquals(Optional.of(genre), mpaAndGenresStorage.findGenreById(4));
+		Genre genre = new Genre(4, "Триллер");
+		assertEquals(genre, mpaAndGenresStorage.findGenreById(4));
 	}
 
 	@Test
 	public void findAllGenres() {;
 		assertEquals(6, mpaAndGenresStorage.findAllGenres().size());
 	}
+
 
 }
