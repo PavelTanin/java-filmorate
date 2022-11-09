@@ -17,16 +17,6 @@ public interface UserStorage {
 
     User findById(Integer id);
 
-    void addFriend(Integer id, Integer friendId);
-
-    void deleteFriend(Integer id, Integer friendId);
-
-    public List<User> getFriendList(Integer id);
-
-    public List<User> commonFriendsList(Integer id, Integer otherId);
-
     boolean contains(Integer id);
-
-    boolean containsFriend(Integer id, Integer friendId);
 
 }

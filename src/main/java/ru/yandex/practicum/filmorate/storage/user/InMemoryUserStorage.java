@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -14,8 +13,6 @@ public class InMemoryUserStorage implements UserStorage {
     private int id;
 
     private final Map<Integer, User> userList = new HashMap();
-
-    private final Map<Integer, List<Integer>> friendshipList = new HashMap<>();
 
     @Override
     public User addUser(User user) {
@@ -58,41 +55,8 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void addFriend(Integer id, Integer friendId) {
-        if (friendshipList.containsKey(id)) {
-            friendshipList.get(id).add(friendId);
-        } else {
-            friendshipList.put(id, new ArrayList<>(friendId));
-        }
-    }
-
-    @Override
-    public void deleteFriend(Integer id, Integer friendId) {
-        friendshipList.get(id).remove(friendId);
-    }
-
-    @Override
-    public List<User> getFriendList(Integer id) {
-        return friendshipList.get(id).stream()
-                .map(this::findById)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<User> commonFriendsList(Integer id, Integer otherId) {
-        return getFriendList(id).stream()
-                .filter(o -> getFriendList(otherId).contains(o))
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public boolean contains(Integer id) {
         return userList.containsKey(id);
-    }
-
-    @Override
-    public boolean containsFriend(Integer id, Integer friendId) {
-        return friendshipList.get(id).contains(friendId);
     }
 
     public Integer idGenerator() {

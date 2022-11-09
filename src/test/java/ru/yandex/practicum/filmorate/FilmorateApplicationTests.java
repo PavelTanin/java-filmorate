@@ -10,6 +10,8 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.friendship.FriendshipStorage;
+import ru.yandex.practicum.filmorate.storage.likes.LikesStorage;
 import ru.yandex.practicum.filmorate.storage.mpaandgenres.MpaAndGenresStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -26,7 +28,11 @@ class FilmorateApplicationTests {
 
 	private final UserStorage userStorage;
 
+	private final FriendshipStorage friendshipStorage;
+
 	private final FilmStorage filmStorage;
+
+	private final LikesStorage likesStorage;
 
 	private final MpaAndGenresStorage mpaAndGenresStorage;
 
@@ -124,19 +130,19 @@ class FilmorateApplicationTests {
 
 	@Test
 	public void addAndDeleteFriendTest() {
-		userStorage.addFriend(1, 2);
-		assertEquals(1, userStorage.getFriendList(1).size());
-		userStorage.deleteFriend(1, 2);
-		assertEquals(0, userStorage.getFriendList(1).size());
+		friendshipStorage.addFriend(1, 2);
+		assertEquals(1, friendshipStorage.getFriendList(1).size());
+		friendshipStorage.deleteFriend(1, 2);
+		assertEquals(0, friendshipStorage.getFriendList(1).size());
 	}
 
 	@Test
 	public void getCommonFriendsTest() {
-		userStorage.addFriend(1, 2);
-		userStorage.addFriend(3, 2);
-		assertEquals(userStorage.findById(2), userStorage.commonFriendsList(1, 3).get(0));
-		userStorage.deleteFriend(1, 2);
-		userStorage.deleteFriend(3, 2);
+		friendshipStorage.addFriend(1, 2);
+		friendshipStorage.addFriend(3, 2);
+		assertEquals(userStorage.findById(2), friendshipStorage.commonFriendsList(1, 3).get(0));
+		friendshipStorage.deleteFriend(1, 2);
+		friendshipStorage.deleteFriend(3, 2);
 	}
 
 
@@ -198,19 +204,19 @@ class FilmorateApplicationTests {
 	@Test
 	public void addAndDeleteLikeTest() {
 		Integer actualRate = filmStorage.findById(1).getRate();
-		filmStorage.addLike(1, 1);
+		likesStorage.addLike(1, 1);
 		assertEquals(actualRate + 1, filmStorage.findById(1).getRate());
-		filmStorage.deleteLike(1, 2);
+		likesStorage.deleteLike(1, 2);
 		assertEquals(actualRate, filmStorage.findById(1).getRate());
 	}
 
 	@Test
 	public void getPopularFilmTest() {
-		filmStorage.addLike(3, 1);
-		filmStorage.addLike(3, 2);
+		likesStorage.addLike(3, 1);
+		likesStorage.addLike(3, 2);
 		assertEquals(filmStorage.findById(3), filmStorage.getPopularFilms(3).get(0));
-		filmStorage.deleteLike(3, 1);
-		filmStorage.deleteLike(3, 2);
+		likesStorage.deleteLike(3, 1);
+		likesStorage.deleteLike(3, 2);
 	}
 
 	@Test

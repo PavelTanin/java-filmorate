@@ -16,13 +16,7 @@ public interface FilmStorage {
 
     Film findById(Integer id);
 
-    void addLike(Integer id, Integer userId);
-
-    void deleteLike(Integer id, Integer userId);
-
     List<Film> getPopularFilms(Integer count);
-
-    boolean containsLike(Integer id, Integer userId);
 
     boolean contains(Integer id);
 }

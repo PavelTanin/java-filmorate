@@ -42,10 +42,8 @@ public class FilmDbStorage implements FilmStorage {
         }, kh);
         film.setId((Integer) kh.getKey());
         if (!film.getGenres().isEmpty()) {
-            film.setGenres(film.getGenres().stream()
-                    .sorted(new GenresSorter())
-                    .collect(Collectors.toCollection(LinkedHashSet::new)));
-            updateGenres(film);
+            log.info("Добавлен фильм {} - {}", film.getId(), film.getName());
+            return updateGenres(film);
         }
         log.info("Добавлен фильм {} - {}", film.getId(), film.getName());
         return film;
@@ -58,12 +56,10 @@ public class FilmDbStorage implements FilmStorage {
                 film.getReleaseDate(), film.getRate(), film.getMpa().getId(), film.getId());
         jdbcTemplate.update("DELETE FROM FILM_GENRE WHERE FILM_ID = ?", film.getId());
         if (!film.getGenres().isEmpty()) {
-            film.setGenres(film.getGenres().stream()
-                    .sorted(new GenresSorter())
-                    .collect(Collectors.toCollection(LinkedHashSet::new)));
-            updateGenres(film);
+            log.info("Обновлена информация о фильме {}", film.getId());
+            return updateGenres(film);
         }
-        log.info("Обновлена информация о пользователе {}", film.getId());
+        log.info("Обновлена информация о фильме {}", film.getId());
         return film;
     }
 
@@ -101,24 +97,14 @@ public class FilmDbStorage implements FilmStorage {
         return result;
     }
 
-    @Override
-    public void addLike(Integer id, Integer userId) {
-        jdbcTemplate.update("INSERT INTO LIKES VALUES (?, ?)", id, userId);
-        jdbcTemplate.update("UPDATE FILMS SET RATE = (SELECT RATE " +
-                "FROM FILMS WHERE ID = ?) + 1 WHERE ID = ?", id, id);
-    }
-
-    @Override
-    public void deleteLike(Integer id, Integer userId) {
-        jdbcTemplate.update("DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?", id, userId);
-        jdbcTemplate.update("UPDATE FILMS SET RATE = (SELECT RATE " +
-                "FROM FILMS WHERE ID = ?) - 1 WHERE ID = ?", id, id);
-    }
-
-    private void updateGenres(Film film) {
+    private Film updateGenres(Film film) {
+        film.setGenres(film.getGenres().stream()
+                .sorted(new GenresSorter())
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
         for (Genre genre : film.getGenres()) {
             jdbcTemplate.update("INSERT INTO FILM_GENRE VALUES (?, ?)", film.getId(), genre.getId());
         }
+        return film;
     }
 
     @Override
@@ -131,12 +117,6 @@ public class FilmDbStorage implements FilmStorage {
                 "RIGHT OUTER JOIN FILMS AS f ON f.ID=fg.FILM_ID " +
                 "INNER JOIN MPA_RATING AS m ON f.MPA = m.MPA_ID " +
                 "GROUP BY f.ID ORDER BY f.RATE DESC LIMIT ?", new FilmMapper(), count);
-    }
-
-    @Override
-    public boolean containsLike(Integer id, Integer userId) {
-        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?",
-                Integer.class, id, userId) > 0;
     }
 
     @Override

@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.CustomValidator;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.friendship.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
@@ -17,6 +18,9 @@ import java.util.List;
 public class UserService {
 
     private final UserStorage userStorage;
+
+    private final FriendshipStorage friendshipStorage;
+
     private final CustomValidator customValidator;
 
     public List<User> findAll() {
@@ -61,21 +65,21 @@ public class UserService {
     }
 
     public String addFriend(Integer id, Integer friendId) {
-        if (!userStorage.contains(id) || !userStorage.contains(friendId) || userStorage.containsFriend(id, friendId)) {
+        if (!userStorage.contains(id) || !userStorage.contains(friendId) || friendshipStorage.containsFriend(id, friendId)) {
             log.info("Не удалось добавить в друзья. Один из пользователей не зарегестрирован или пользователи уже дружат");
             throw new ObjectNotFoundException("Один из пользователей не зарегестрирован или они уже дружат");
         }
-        userStorage.addFriend(id, friendId);
+        friendshipStorage.addFriend(id, friendId);
         log.info("Пользователь {} добавил в друзья пользователя {}", id, friendId);
         return String.format("Пользователь %s добавлен в список друзей", friendId);
     }
 
     public String deleteFriend(Integer id, Integer friendId) {
-        if (!userStorage.contains(id) || !userStorage.contains(friendId) || !userStorage.containsFriend(id, friendId)) {
+        if (!userStorage.contains(id) || !userStorage.contains(friendId) || !friendshipStorage.containsFriend(id, friendId)) {
             log.info("Не удалось удалить из друзей. Один из пользователей не зарегестрирован или пользователи не дружат");
             throw new ObjectNotFoundException("Один из пользователей не зарегестрирован или пользователи уже не дружат");
         }
-        userStorage.deleteFriend(id, friendId);
+        friendshipStorage.deleteFriend(id, friendId);
         log.info("Пользователь {} удалил из друзей пользователя {}", id, friendId);
         return String.format("Пользователь %s удален из списка друзей", friendId);
     }
@@ -86,7 +90,7 @@ public class UserService {
             throw new ObjectNotFoundException("Один из пользователей не зарегестрирован");
         }
         log.info("Возвращен список друзей пользователя {}", id);
-        return userStorage.getFriendList(id);
+        return friendshipStorage.getFriendList(id);
     }
 
     public List<User> commonFriendsList(Integer id, Integer otherId) {
@@ -95,7 +99,7 @@ public class UserService {
             throw new ObjectNotFoundException("Один из пользователей не зарегестрирован");
         }
         log.info("Получен список общих друзей пользователей {} и {}", id, otherId);
-        return userStorage.commonFriendsList(id, otherId);
+        return friendshipStorage.commonFriendsList(id, otherId);
     }
 }
 

@@ -14,8 +14,6 @@ public class InMemoryFilmStorage implements FilmStorage {
     private int id;
     private final Map<Integer, Film> filmList = new HashMap<>();
 
-    private final Map<Integer, List<Integer>> likeList = new HashMap<>();
-
     @Override
     public Film addFilm(Film film) {
         film.setId(idGenerator());
@@ -53,30 +51,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void addLike(Integer id, Integer userId) {
-        if (likeList.containsKey(id)) {
-            likeList.get(id).add(userId);
-        } else {
-            likeList.put(id, new ArrayList<>(userId));
-        }
-    }
-
-    @Override
-    public void deleteLike(Integer id, Integer userId) {
-        likeList.get(id).remove(userId);
-    }
-
-    @Override
     public List<Film> getPopularFilms(Integer count) {
         return new ArrayList<>(filmList.values()).stream()
                 .sorted((Film o1, Film o2) -> o1.getRate() - o2.getRate())
                 .limit(count)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public boolean containsLike(Integer id, Integer userId) {
-        return likeList.get(id).contains(userId);
     }
 
     @Override

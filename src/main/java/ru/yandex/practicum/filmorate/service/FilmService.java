@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.CustomValidator;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.likes.LikesStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
@@ -24,6 +25,8 @@ public class FilmService {
     private final FilmStorage filmStorage;
 
     private final UserStorage userStorage;
+
+    private final LikesStorage likesStorage;
 
     private final CustomValidator customValidator;
 
@@ -69,12 +72,12 @@ public class FilmService {
             log.info("Попытка добавить лайк несуществующиму фильму или несуществующим пользователем");
             throw new ObjectNotFoundException("Нет такого фильма или пользователя");
         }
-        if (filmStorage.containsLike(id, userId)) {
+        if (likesStorage.containsLike(id, userId)) {
             log.info("Попытка повторно поставить лайк. Фильм {} - Пользователь {}", id, userId);
             throw new DuplicateLike("Пользователь уже оценил выбранный фильм");
         }
         log.info("Поставлен лайк");
-        filmStorage.addLike(id, userId);
+        likesStorage.addLike(id, userId);
         return String.format("Пользователю %s понравился фильм %s", userId, id);
     }
 
@@ -83,12 +86,12 @@ public class FilmService {
             log.info("Попытка удалить лайк несуществующиму фильму или несуществующим пользователем");
             throw new ObjectNotFoundException("Нет такого фильма или пользователя");
         }
-        if (!filmStorage.containsLike(id, userId)) {
+        if (!likesStorage.containsLike(id, userId)) {
             log.info("Попытка удалить непоставленный лайк. Фильм {} - Пользователь {}", id, userId);
             throw new DuplicateLike("Пользователь еще не оценил выбранный фильм");
         }
         log.info("Лайк удален");
-        filmStorage.deleteLike(id, userId);
+        likesStorage.deleteLike(id, userId);
         return String.format("Пользователю %s больше не нравится фильм %s", userId, id);
     }
 
