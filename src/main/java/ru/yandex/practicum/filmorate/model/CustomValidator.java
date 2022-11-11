@@ -1,9 +1,7 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.model;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 
 
 import java.time.LocalDate;
@@ -35,7 +33,9 @@ public class CustomValidator {
             throw new ValidationException("Некорректно введено описание фильма");
         } else if (film.getDuration() == null) {
             throw new ValidationException("Некорректно введена продолжительность фильма");
-        } else {
+        } else if (film.getMpa().equals(null)) {
+            throw new ValidationException("Некоректно указан MPA рейтинг");
+        }else {
             return true;
         }
     }

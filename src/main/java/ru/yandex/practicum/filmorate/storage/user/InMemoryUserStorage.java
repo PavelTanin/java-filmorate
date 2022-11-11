@@ -14,19 +14,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Integer, User> userList = new HashMap();
 
-
-    @Override
-    public List<User> findAll() {
-        log.info("Получен список пользователей");
-        return new ArrayList<>(userList.values());
-    }
-
-    @Override
-    public User findById(Integer id) {
-        log.info("Найден пользователь {}", id);
-        return userList.get(id);
-    }
-
     @Override
     public User addUser(User user) {
         user.setId(idGenerator());
@@ -46,7 +33,25 @@ public class InMemoryUserStorage implements UserStorage {
         updatedUser.setLogin(user.getLogin());
         updatedUser.setBirthday(user.getBirthday());
         log.info("Обновлена информация о пользователе {}", id);
-        return userList.get(user.getId());
+        return user;
+    }
+
+    @Override
+    public void deleteUser(Integer id) {
+        userList.remove(id);
+        log.info("Пользователь {} удален", id);
+    }
+
+    @Override
+    public List<User> findAll() {
+        log.info("Получен список пользователей");
+        return new ArrayList<>(userList.values());
+    }
+
+    @Override
+    public User findById(Integer id) {
+        log.info("Найден пользователь {}", id);
+        return userList.get(id);
     }
 
     @Override
@@ -54,7 +59,6 @@ public class InMemoryUserStorage implements UserStorage {
         return userList.containsKey(id);
     }
 
-    @Override
     public Integer idGenerator() {
         id++;
         return id;

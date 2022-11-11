@@ -1,23 +1,26 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.CustomValidator;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserValidationTest {
 
-    CustomValidator customValidator = new CustomValidator();
-    InMemoryUserStorage inMemoryUserStorage = new InMemoryUserStorage();
-    UserService userService = new UserService(inMemoryUserStorage, customValidator);
-    UserController userController = new UserController(userService);
+    private final UserController userController;
 
     @Test
     void shouldReturnBadRequestResponsWhenLoginContainsSpace() {

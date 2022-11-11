@@ -19,18 +19,6 @@ public class FilmController {
 
     private final FilmService filmService;
 
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<Film> findAll() {
-        return filmService.findAll();
-    }
-
-    @GetMapping("{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public Film findById(@PathVariable(value = "id") Integer id) {
-        return filmService.findById(id);
-    }
-
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public Film addFilm(@Valid @RequestBody Film film) {
@@ -41,6 +29,24 @@ public class FilmController {
     @ResponseStatus(HttpStatus.OK)
     public Film updateFilm(@Valid @RequestBody Film film) {
         return filmService.updateFilm(film);
+    }
+
+    @PutMapping("{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public String deleteFilm(@PathVariable(value = "id") Integer id) {
+        return filmService.deleteFilm(id);
+    }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public List<Film> findAll() {
+        return filmService.findAll();
+    }
+
+    @GetMapping("{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Film findById(@PathVariable(value = "id") Integer id) {
+        return filmService.findById(id);
     }
 
     @PutMapping("{id}/like/{userId}")
@@ -59,9 +65,8 @@ public class FilmController {
 
     @GetMapping("popular")
     @ResponseStatus(HttpStatus.OK)
-    public List<Film> getPopulatFilms(@RequestParam(defaultValue = "10") Integer count) {
+    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") Integer count) {
         return filmService.getPopularFilms(count);
     }
-
 
 }

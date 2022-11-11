@@ -7,16 +7,16 @@ import java.util.List;
 
 public interface UserStorage {
 
-    List<User> findAll();
-
-    User findById(Integer id);
-
     User addUser(User user);
 
     User updateUser(User user);
 
-    boolean contains(Integer id);
+    void deleteUser(Integer id);
 
-    Integer idGenerator();
+    List<User> findAll();
+
+    User findById(Integer id);
+
+    boolean contains(Integer id);
 
 }
